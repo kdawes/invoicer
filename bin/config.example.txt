@@ -1,0 +1,6 @@
+{
+   "name" : "Joe user",
+   "address": "1122 Street\nCity, Province\nPostalCode",
+   "email": "user@gmail.com",
+   "currency" : "CAD"
+}
