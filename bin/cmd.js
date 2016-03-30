@@ -51,7 +51,7 @@ function readJSON (cfg) {
         var expenses = require(path.resolve(argv.e));
         return withConfig(require(configFile), expenses);
     }
-    
+
     process.stdin.pipe(concat(function (body) {
         var expenses = JSON.parse(body);
         withConfig(require(configFile), expenses);
@@ -67,6 +67,7 @@ function withConfig (cfg, expenses) {
         var total = expenses[0].hours.reduce(function (sum, row) {
             return sum + row.hours;
         }, 0);
+
         var totals = [
             [ '-----------', '-----' ],
             [ 'total hours', round(total, 100) ],
@@ -82,7 +83,7 @@ function withConfig (cfg, expenses) {
         ));
         return;
     }
-    
+
     var doc = new pdfkit();
     doc.pipe(fs.createWriteStream(outfile));
 
@@ -142,7 +143,7 @@ function withConfig (cfg, expenses) {
             });
         });
         hours = round(hours, 100);
-        
+
         var rates = Object.keys(expenses.reduce(function (acc, row) {
             if (row.rate) acc[row.rate] = true;
             return acc;
@@ -164,20 +165,22 @@ function withConfig (cfg, expenses) {
             }
             return acc;
         }, 0), 100) + ' ' + cfg.currency;
-        
+
         doc.fillColor('black').text('________________________________');
 
+        if (parseInt(hours) > 0) {
         doc.text('Total Hours', opts).text(hours, { align: 'right' });
         doc.text('Hourly Rate', opts)
             .text(rates.join(',') + ' ' + cfg.currency, { align: 'right' });
-        doc.text('Total (USD)', opts).text(amount, { align: 'right' });
+        }
+        doc.text('Total (' + cfg.currency +')', opts).text(amount, { align: 'right' });
 
         doc.fillColor('black').moveUp()
             .text('________________________________');
     })();
 
     doc.end();
-    
+
     writeConfig(cfg);
 }
 
@@ -190,12 +193,12 @@ function prompter (cb) {
     var cfg = {};
     console.log('Gathering configuration options.');
     console.log('Use \\n to denote line-breaks.');
-    
+
     var field = fields.shift();
     process.stdout.write('  ' + field + '> ');
     process.stdin.pipe(split()).pipe(through2(function (line, enc, next) {
         cfg[field] = line.toString('utf8').replace(/\\n/g, '\n');
-        
+
         if (fields.length === 0) {
             cb(null, cfg);
             process.stdin.end();
@@ -211,7 +214,7 @@ function prompter (cb) {
 function usage (code) {
     var rs = fs.createReadStream(__dirname + '/usage.txt');
     rs.pipe(process.stdout);
-    
+
     rs.on('close', function () {
         if (code !== 0) process.exit(code);
     });
